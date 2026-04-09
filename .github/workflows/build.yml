@@ -5,6 +5,10 @@ on:
     branches: [master]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   # --- JOB 1: DOCKER VARIANTS (Linux) ---
   build-docker:
