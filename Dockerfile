@@ -8,17 +8,20 @@ FROM ${BASE_IMAGE} AS builder
 ARG ARCH_FLAGS
 ARG USE_CUDA="OFF"
 ARG USE_BLAS="ON"
+ARG USE_OPENSSL="ON"
 ARG CUDA_ARCH="native"
 ARG LLAMA_SHA="unknown"
 ARG LLAMA_BUILD_NUMBER="0"
 
 # Install build dependencies (Alpine vs Ubuntu)
 RUN if [ -f /etc/alpine-release ]; then \
-        pkgs="build-base cmake linux-headers curl-dev"; \
+        pkgs="build-base cmake linux-headers"; \
+        if [ "${USE_OPENSSL}" = "ON" ]; then pkgs="$pkgs curl-dev"; fi; \
         if [ "${USE_BLAS}" = "ON" ]; then pkgs="$pkgs openblas-dev"; fi; \
         apk add --no-cache $pkgs; \
     else \
-        pkgs="build-essential cmake pkg-config libcurl4-openssl-dev"; \
+        pkgs="build-essential cmake pkg-config"; \
+        if [ "${USE_OPENSSL}" = "ON" ]; then pkgs="$pkgs libcurl4-openssl-dev"; fi; \
         if [ "${USE_BLAS}" = "ON" ]; then pkgs="$pkgs libopenblas-dev"; fi; \
         apt-get update && \
         apt-get install -y $pkgs && \
@@ -37,6 +40,7 @@ RUN cmake -B build \
     -DBUILD_SHARED_LIBS=ON \
     -DGGML_BLAS=${USE_BLAS} \
     -DGGML_BLAS_VENDOR=OpenBLAS \
+    -DLLAMA_OPENSSL=${USE_OPENSSL} \
     -DLLAMA_BUILD_TESTS=OFF \
     -DLLAMA_BUILD_EXAMPLES=OFF \
     -DLLAMA_BUILD_COMMIT=${LLAMA_SHA} \
@@ -53,14 +57,17 @@ ARG ARCH_FLAGS
 ARG VARIANT="unknown"
 ARG LLAMA_SHA="unknown"
 ARG USE_BLAS="ON"
+ARG USE_OPENSSL="ON"
 
 # Install runtime dependencies (Alpine vs Ubuntu)
 RUN if [ -f /etc/alpine-release ]; then \
-        pkgs="libstdc++ libgomp libcurl"; \
+        pkgs="libstdc++ libgomp"; \
+        if [ "${USE_OPENSSL}" = "ON" ]; then pkgs="$pkgs libcurl"; fi; \
         if [ "${USE_BLAS}" = "ON" ]; then pkgs="$pkgs openblas"; fi; \
         apk add --no-cache $pkgs; \
     else \
-        pkgs="libcurl4 libgomp1"; \
+        pkgs="libgomp1"; \
+        if [ "${USE_OPENSSL}" = "ON" ]; then pkgs="$pkgs libcurl4"; fi; \
         if [ "${USE_BLAS}" = "ON" ]; then pkgs="$pkgs libopenblas0"; fi; \
         apt-get update && \
         apt-get install -y $pkgs && \

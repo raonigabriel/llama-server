@@ -28,6 +28,7 @@ jobs:
             flags: "-march=x86-64-v2"
             cuda: "OFF"
             blas: "OFF"
+            openssl: "OFF"
             base: alpine:latest
             runtime: alpine:latest
           - variant: xeon-cuda
@@ -78,6 +79,7 @@ jobs:
             VARIANT=${{ matrix.variant }}
             USE_CUDA=${{ matrix.cuda }}
             USE_BLAS=${{ matrix.blas || 'ON' }}
+            USE_OPENSSL=${{ matrix.openssl || 'ON' }}
             CUDA_ARCH=${{ matrix.cuda_arch || 'native' }}
             LLAMA_SHA=${{ steps.llama-sha.outputs.sha }}
             LLAMA_BUILD_NUMBER=${{ steps.llama-sha.outputs.number || '0' }}
