@@ -29,6 +29,7 @@ jobs:
             cuda: "OFF"
             blas: "OFF"
             openssl: "OFF"
+            boringssl: "ON"
             base: alpine:latest
             runtime: alpine:latest
           - variant: xeon-cuda
@@ -80,6 +81,7 @@ jobs:
             USE_CUDA=${{ matrix.cuda }}
             USE_BLAS=${{ matrix.blas || 'ON' }}
             USE_OPENSSL=${{ matrix.openssl || 'ON' }}
+            USE_BORINGSSL=${{ matrix.boringssl || 'OFF' }}
             CUDA_ARCH=${{ matrix.cuda_arch || 'native' }}
             LLAMA_SHA=${{ steps.llama-sha.outputs.sha }}
             LLAMA_BUILD_NUMBER=${{ steps.llama-sha.outputs.number || '0' }}
