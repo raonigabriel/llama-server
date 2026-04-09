@@ -9,6 +9,7 @@ ARG ARCH_FLAGS
 ARG USE_CUDA="OFF"
 ARG CUDA_ARCH="native"
 ARG LLAMA_SHA="unknown"
+ARG LLAMA_BUILD_NUMBER="0"
 
 # Install build dependencies (Alpine vs Ubuntu)
 RUN if [ -f /etc/alpine-release ]; then \
@@ -32,6 +33,8 @@ RUN cmake -B build \
     -DGGML_BLAS=ON \
     -DGGML_BLAS_VENDOR=OpenBLAS \
     -DLLAMA_BUILD_TESTS=OFF \
+    -DLLAMA_BUILD_COMMIT=${LLAMA_SHA} \
+    -DLLAMA_BUILD_NUMBER=${LLAMA_BUILD_NUMBER} \
     -DCMAKE_BUILD_TYPE=Release && \
     cmake --build build --config Release -j $(nproc) || \
     (echo "=== Parallel build failed, retrying single-threaded for error details ===" && \

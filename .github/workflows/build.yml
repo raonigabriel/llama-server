@@ -45,6 +45,8 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/ggerganov/llama.cpp.git llama-src
           echo "sha=$(cd llama-src && git rev-parse --short=12 HEAD)" >> "$GITHUB_OUTPUT"
+          cd llama-src && git fetch --unshallow
+          echo "number=$(cd llama-src && git rev-list --count HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.6.0
@@ -73,6 +75,7 @@ jobs:
             USE_CUDA=${{ matrix.cuda }}
             CUDA_ARCH=${{ matrix.cuda_arch || 'native' }}
             LLAMA_SHA=${{ steps.llama-sha.outputs.sha }}
+            LLAMA_BUILD_NUMBER=${{ steps.llama-sha.outputs.number }}
           tags: |
             ghcr.io/${{ github.repository }}:${{ matrix.variant }}-${{ steps.llama-sha.outputs.sha }}
             ghcr.io/${{ github.repository }}:${{ matrix.variant }}-latest
