@@ -31,6 +31,7 @@ RUN cmake -B build \
     -DBUILD_SHARED_LIBS=ON \
     -DGGML_BLAS=ON \
     -DGGML_BLAS_VENDOR=OpenBLAS \
+    -DLLAMA_BUILD_TESTS=OFF \
     -DCMAKE_BUILD_TYPE=Release && \
     cmake --build build --config Release -j $(nproc) || \
     (echo "=== Parallel build failed, retrying single-threaded for error details ===" && \
