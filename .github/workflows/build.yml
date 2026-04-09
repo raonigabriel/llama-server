@@ -33,6 +33,7 @@ jobs:
             arch: amd64
             flags: "-march=x86-64-v3"
             cuda: "ON"
+            cuda_arch: "86"
             base: nvidia/cuda:13.2.0-devel-ubuntu24.04
             runtime: nvidia/cuda:13.2.0-base-ubuntu24.04
 
@@ -70,6 +71,7 @@ jobs:
             ARCH_FLAGS=${{ matrix.flags }}
             VARIANT=${{ matrix.variant }}
             USE_CUDA=${{ matrix.cuda }}
+            CUDA_ARCH=${{ matrix.cuda_arch || 'native' }}
             LLAMA_SHA=${{ steps.llama-sha.outputs.sha }}
           tags: |
             ghcr.io/${{ github.repository }}:${{ matrix.variant }}-${{ steps.llama-sha.outputs.sha }}

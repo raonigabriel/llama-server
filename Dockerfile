@@ -7,6 +7,7 @@ FROM ${BASE_IMAGE} AS builder
 
 ARG ARCH_FLAGS
 ARG USE_CUDA="OFF"
+ARG CUDA_ARCH="native"
 ARG LLAMA_SHA="unknown"
 
 # Install build dependencies (Alpine vs Ubuntu)
@@ -26,11 +27,14 @@ RUN cmake -B build \
     -DCMAKE_C_FLAGS="${ARCH_FLAGS}" \
     -DCMAKE_CXX_FLAGS="${ARCH_FLAGS}" \
     -DGGML_CUDA=${USE_CUDA} \
+    -DCMAKE_CUDA_ARCHITECTURES=${CUDA_ARCH} \
     -DBUILD_SHARED_LIBS=ON \
     -DGGML_BLAS=ON \
     -DGGML_BLAS_VENDOR=OpenBLAS \
     -DCMAKE_BUILD_TYPE=Release && \
-    cmake --build build --config Release -j $(nproc)
+    cmake --build build --config Release -j $(nproc) || \
+    (echo "=== Parallel build failed, retrying single-threaded for error details ===" && \
+     cmake --build build --config Release -j 1 2>&1 | tail -80 && exit 1)
 
 # --- STAGE 2: RUNTIME ---
 FROM ${RUNTIME_IMAGE} AS runtime
