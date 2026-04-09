@@ -19,9 +19,10 @@ RUN if [ -f /etc/alpine-release ]; then \
         pkgs="build-base cmake linux-headers"; \
         if [ "${USE_OPENSSL}" = "ON" ]; then pkgs="$pkgs curl-dev"; fi; \
         if [ "${USE_BLAS}" = "ON" ]; then pkgs="$pkgs openblas-dev"; fi; \
+        if [ "${USE_BORINGSSL}" = "ON" ]; then pkgs="$pkgs git go"; fi; \
         apk add --no-cache $pkgs; \
     else \
-        pkgs="build-essential cmake pkg-config"; \
+        pkgs="build-essential cmake pkg-config git golang-go"; \
         if [ "${USE_OPENSSL}" = "ON" ]; then pkgs="$pkgs libcurl4-openssl-dev"; fi; \
         if [ "${USE_BLAS}" = "ON" ]; then pkgs="$pkgs libopenblas-dev"; fi; \
         apt-get update && \
