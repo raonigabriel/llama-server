@@ -7,16 +7,21 @@ FROM ${BASE_IMAGE} AS builder
 
 ARG ARCH_FLAGS
 ARG USE_CUDA="OFF"
+ARG USE_BLAS="ON"
 ARG CUDA_ARCH="native"
 ARG LLAMA_SHA="unknown"
 ARG LLAMA_BUILD_NUMBER="0"
 
 # Install build dependencies (Alpine vs Ubuntu)
 RUN if [ -f /etc/alpine-release ]; then \
-        apk add --no-cache build-base cmake linux-headers openblas-dev curl-dev; \
+        pkgs="build-base cmake linux-headers curl-dev"; \
+        if [ "${USE_BLAS}" = "ON" ]; then pkgs="$pkgs openblas-dev"; fi; \
+        apk add --no-cache $pkgs; \
     else \
+        pkgs="build-essential cmake pkg-config libcurl4-openssl-dev"; \
+        if [ "${USE_BLAS}" = "ON" ]; then pkgs="$pkgs libopenblas-dev"; fi; \
         apt-get update && \
-        apt-get install -y build-essential cmake pkg-config libopenblas-dev libcurl4-openssl-dev && \
+        apt-get install -y $pkgs && \
         rm -rf /var/lib/apt/lists/*; \
     fi
 
@@ -30,12 +35,12 @@ RUN cmake -B build \
     -DGGML_CUDA=${USE_CUDA} \
     -DCMAKE_CUDA_ARCHITECTURES=${CUDA_ARCH} \
     -DBUILD_SHARED_LIBS=ON \
-    -DGGML_BLAS=ON \
+    -DGGML_BLAS=${USE_BLAS} \
     -DGGML_BLAS_VENDOR=OpenBLAS \
     -DLLAMA_BUILD_TESTS=OFF \
     -DLLAMA_BUILD_EXAMPLES=OFF \
     -DLLAMA_BUILD_COMMIT=${LLAMA_SHA} \
-    -DLLAMA_BUILD_NUMBER=${LLAMA_BUILD_NUMBER} \
+    -DLLAMA_BUILD_NUMBER=${LLAMA_BUILD_NUMBER:-0} \
     -DCMAKE_BUILD_TYPE=Release && \
     cmake --build build --config Release -j $(nproc) || \
     (echo "=== Parallel build failed, retrying single-threaded for error details ===" && \
@@ -47,13 +52,18 @@ FROM ${RUNTIME_IMAGE} AS runtime
 ARG ARCH_FLAGS
 ARG VARIANT="unknown"
 ARG LLAMA_SHA="unknown"
+ARG USE_BLAS="ON"
 
 # Install runtime dependencies (Alpine vs Ubuntu)
 RUN if [ -f /etc/alpine-release ]; then \
-        apk add --no-cache libstdc++ libgomp openblas libcurl; \
+        pkgs="libstdc++ libgomp libcurl"; \
+        if [ "${USE_BLAS}" = "ON" ]; then pkgs="$pkgs openblas"; fi; \
+        apk add --no-cache $pkgs; \
     else \
+        pkgs="libcurl4 libgomp1"; \
+        if [ "${USE_BLAS}" = "ON" ]; then pkgs="$pkgs libopenblas0"; fi; \
         apt-get update && \
-        apt-get install -y libopenblas0 libcurl4 libgomp1 && \
+        apt-get install -y $pkgs && \
         rm -rf /var/lib/apt/lists/*; \
     fi
 

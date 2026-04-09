@@ -27,12 +27,14 @@ jobs:
             arch: amd64
             flags: "-march=x86-64-v2"
             cuda: "OFF"
+            blas: "OFF"
             base: alpine:latest
             runtime: alpine:latest
           - variant: xeon-cuda
             arch: amd64
             flags: "-march=x86-64-v3"
             cuda: "ON"
+            blas: "ON"
             cuda_arch: "86"
             base: nvidia/cuda:13.2.0-devel-ubuntu24.04
             runtime: nvidia/cuda:13.2.0-base-ubuntu24.04
@@ -45,8 +47,10 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/ggerganov/llama.cpp.git llama-src
           echo "sha=$(cd llama-src && git rev-parse --short=12 HEAD)" >> "$GITHUB_OUTPUT"
-          cd llama-src && git fetch --unshallow
-          echo "number=$(cd llama-src && git rev-list --count HEAD)" >> "$GITHUB_OUTPUT"
+          cd llama-src
+          git fetch --unshallow 2>/dev/null || true
+          number=$(git rev-list --count HEAD 2>/dev/null || echo 0)
+          echo "number=$number" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.6.0
@@ -73,9 +77,10 @@ jobs:
             ARCH_FLAGS=${{ matrix.flags }}
             VARIANT=${{ matrix.variant }}
             USE_CUDA=${{ matrix.cuda }}
+            USE_BLAS=${{ matrix.blas || 'ON' }}
             CUDA_ARCH=${{ matrix.cuda_arch || 'native' }}
             LLAMA_SHA=${{ steps.llama-sha.outputs.sha }}
-            LLAMA_BUILD_NUMBER=${{ steps.llama-sha.outputs.number }}
+            LLAMA_BUILD_NUMBER=${{ steps.llama-sha.outputs.number || '0' }}
           tags: |
             ghcr.io/${{ github.repository }}:${{ matrix.variant }}-${{ steps.llama-sha.outputs.sha }}
             ghcr.io/${{ github.repository }}:${{ matrix.variant }}-latest
