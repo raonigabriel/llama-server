@@ -37,7 +37,7 @@ For ARM SBCs (Orange Pi 5) or low-power mini PCs (Celeron N5105).
 ```yaml
 services:
   gemma:
-    image: ghcr.io/raonigabriel/llama-server:opi5 # or :morefine
+    image: ghcr.io/raonigabriel/llama-server:opi5-latest # or :morefine-latest
     container_name: gemma
     ports:
       - "11434:11434"
@@ -59,7 +59,7 @@ For NVIDIA GPU systems. Uses `-ngl -1` to offload all model layers to VRAM.
 ```yaml
 services:
   gemma:
-    image: ghcr.io/raonigabriel/llama-server:xeon-cuda
+    image: ghcr.io/raonigabriel/llama-server:xeon-cuda-latest
     container_name: gemma
     deploy:
       resources:

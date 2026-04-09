@@ -41,7 +41,7 @@ ARG LLAMA_SHA="unknown"
 
 # Install runtime dependencies (Alpine vs Ubuntu)
 RUN if [ -f /etc/alpine-release ]; then \
-        apk add --no-cache libstdc++ openblas libcurl; \
+        apk add --no-cache libstdc++ libgomp openblas libcurl; \
     else \
         apt-get update && \
         apt-get install -y libopenblas0 libcurl4 libgomp1 && \
