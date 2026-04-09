@@ -15,7 +15,7 @@ Standard LLM runners like Ollama are great but often bloated (3GB+) because they
 | `opi5` | `ghcr.io/raonigabriel/llama-server:opi5-latest` | Orange Pi 5 / RK3588 | ARM NEON (SIMD) | No | Alpine |
 | `morefine` | `ghcr.io/raonigabriel/llama-server:morefine-latest` | Celeron N5105 / Older x86 | SSE4.2 (`x86-64-v2`) | No | Alpine |
 | `xeon-cuda` | `ghcr.io/raonigabriel/llama-server:xeon-cuda-latest` | Xeon v3 + RTX 30/40 Series | AVX2/FMA (`x86-64-v3`) | CUDA 13.2 | Ubuntu 24.04 |
-| `windows-v3-cuda` | `llama-server.exe` | Modern PC + RTX GPU | AVX2 | CUDA 13.2 | Standalone |
+| `windows-v3-cuda` | `llama-server.exe` | Modern PC + RTX GPU | AVX2/FMA | CUDA 13.2 | Standalone |
 
 ## Features
 
