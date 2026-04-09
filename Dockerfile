@@ -14,7 +14,7 @@ RUN if [ -f /etc/alpine-release ]; then \
         apk add --no-cache build-base cmake linux-headers openblas-dev curl-dev; \
     else \
         apt-get update && \
-        apt-get install -y build-essential cmake libopenblas-dev libcurl4-openssl-dev && \
+        apt-get install -y build-essential cmake pkg-config libopenblas-dev libcurl4-openssl-dev && \
         rm -rf /var/lib/apt/lists/*; \
     fi
 

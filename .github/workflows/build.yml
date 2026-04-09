@@ -40,7 +40,6 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/ggerganov/llama.cpp.git llama-src
           echo "sha=$(cd llama-src && git rev-parse --short=12 HEAD)" >> "$GITHUB_OUTPUT"
-          rm -rf llama-src/.git
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.6.0
