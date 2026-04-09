@@ -1,5 +1,8 @@
-# --- STAGE 1: BUILDER ---
+# Global ARGs (must be declared before any FROM to be used in FROM instructions)
 ARG BASE_IMAGE="alpine:latest"
+ARG RUNTIME_IMAGE="alpine:latest"
+
+# --- STAGE 1: BUILDER ---
 FROM ${BASE_IMAGE} AS builder
 
 ARG ARCH_FLAGS
@@ -30,7 +33,6 @@ RUN cmake -B build \
     cmake --build build --config Release -j $(nproc)
 
 # --- STAGE 2: RUNTIME ---
-ARG RUNTIME_IMAGE="alpine:latest"
 FROM ${RUNTIME_IMAGE} AS runtime
 
 ARG ARCH_FLAGS
