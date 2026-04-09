@@ -49,10 +49,12 @@ RUN if [ -f /etc/alpine-release ]; then \
     fi
 
 # Create non-root user (UID/GID 1000)
+# On some base images (e.g. nvidia/cuda), UID 1000 already exists as 'ubuntu'
 RUN if [ -f /etc/alpine-release ]; then \
         addgroup -g 1000 user && adduser -u 1000 -G user -D user; \
     else \
-        groupadd -g 1000 user && useradd -u 1000 -g user -m user; \
+        id -u 1000 >/dev/null 2>&1 || (groupadd -g 1000 user && useradd -u 1000 -g 1000 -m -d /home/user user); \
+        mkdir -p /home/user && chown 1000:1000 /home/user; \
     fi
 
 # Copy shared libraries to system path (default search path for musl and glibc)
@@ -74,9 +76,9 @@ RUN echo "VARIANT=${VARIANT}" > /etc/llama-release && \
 
 # Prepare Hugging Face cache directory
 RUN mkdir -p /home/user/.cache/huggingface/hub && \
-    chown -R user:user /home/user/.cache
+    chown -R 1000:1000 /home/user/.cache
 
-USER user
+USER 1000:1000
 WORKDIR /home/user
 EXPOSE 11434
 ENTRYPOINT ["llama-server"]
