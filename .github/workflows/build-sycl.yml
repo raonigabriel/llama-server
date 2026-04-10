@@ -43,7 +43,7 @@ jobs:
           cmake -G "Ninja" -B build ^
             -DGGML_NATIVE=OFF ^
             -DCMAKE_C_FLAGS="/arch:AVX2" ^
-            -DCMAKE_CXX_FLAGS="/arch:AVX2" ^
+            -DCMAKE_CXX_FLAGS="/arch:AVX2 /EHsc" ^
             -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=icx ^
             -DCMAKE_BUILD_TYPE=Release ^
             -DBUILD_SHARED_LIBS=ON ^
