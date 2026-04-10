@@ -34,6 +34,11 @@ RUN if [ -f /etc/alpine-release ]; then \
 COPY llama-src/ /src/
 WORKDIR /src
 
+# Make CUDA driver stub available at link time for VMM support
+RUN if [ "${USE_CUDA}" = "ON" ] && [ -f /usr/local/cuda/lib64/stubs/libcuda.so ]; then \
+        ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/libcuda.so.1; \
+    fi
+
 RUN cmake -B build \
     -DGGML_NATIVE=OFF \
     -DCMAKE_C_FLAGS="${ARCH_FLAGS}" \
