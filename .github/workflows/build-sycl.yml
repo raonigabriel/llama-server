@@ -1,0 +1,101 @@
+name: Build SYCL
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-windows-sycl:
+    runs-on: windows-2022
+
+    env:
+      WINDOWS_BASEKIT_URL: https://registrationcenter-download.intel.com/akdlm/IRC_NAS/24751ead-ddc5-4479-b9e6-f9fe2ff8b9f2/intel-deep-learning-essentials-2025.2.1.25_offline.exe
+      WINDOWS_DPCPP_MKL: intel.oneapi.win.cpp-dpcpp-common:intel.oneapi.win.mkl.devel:intel.oneapi.win.dnnl:intel.oneapi.win.tbb.devel
+      ONEAPI_ROOT: "C:/Program Files (x86)/Intel/oneAPI"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone llama.cpp
+        shell: pwsh
+        run: |
+          git clone --depth 1 https://github.com/ggerganov/llama.cpp.git llama-src
+          $sha = (cd llama-src; git rev-parse --short=12 HEAD)
+          echo "LLAMA_SHA=$sha" >> $env:GITHUB_ENV
+
+      - name: Install Intel oneAPI
+        shell: cmd
+        run: |
+          curl.exe --output %TEMP%\webimage.exe --url %WINDOWS_BASEKIT_URL% --retry 5 --retry-delay 5
+          start /b /wait %TEMP%\webimage.exe -s -x -f webimage_extracted --log extract.log
+          del %TEMP%\webimage.exe
+          webimage_extracted\bootstrapper.exe -s --action install --components=%WINDOWS_DPCPP_MKL% --eula=accept -p=NEED_VS2017_INTEGRATION=0 -p=NEED_VS2019_INTEGRATION=0 -p=NEED_VS2022_INTEGRATION=0 --log-dir=.
+          rd /s/q "webimage_extracted"
+
+      - name: Build llama-server
+        shell: cmd
+        run: |
+          call "%ONEAPI_ROOT%\setvars.bat" intel64 --force
+          cd llama-src
+          cmake -G "Ninja" -B build ^
+            -DGGML_NATIVE=OFF ^
+            -DCMAKE_C_FLAGS="/arch:AVX2" ^
+            -DCMAKE_CXX_FLAGS="/arch:AVX2" ^
+            -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=icx ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DBUILD_SHARED_LIBS=ON ^
+            -DGGML_SYCL=ON ^
+            -DGGML_SYCL_F16=ON ^
+            -DLLAMA_BUILD_TESTS=OFF ^
+            -DLLAMA_BUILD_EXAMPLES=OFF ^
+            -DLLAMA_BUILD_COMMIT=%LLAMA_SHA% ^
+            -DLLAMA_OPENSSL=OFF ^
+            -DLLAMA_BUILD_BORINGSSL=ON
+          cmake --build build --config Release -j %NUMBER_OF_PROCESSORS% --target llama-server llama-cli
+
+      - name: Package artifacts
+        shell: bash
+        run: |
+          mkdir -p artifact
+
+          # Copy build output (exe + DLLs)
+          cp llama-src/build/bin/* artifact/ 2>/dev/null || true
+          cp llama-src/build/bin/Release/* artifact/ 2>/dev/null || true
+
+          # Copy oneAPI runtime DLLs — MKL
+          cp "${{ env.ONEAPI_ROOT }}/mkl/latest/bin/mkl_sycl_blas.5.dll" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/mkl/latest/bin/mkl_core.2.dll" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/mkl/latest/bin/mkl_tbb_thread.2.dll" artifact/
+
+          # Copy oneAPI runtime DLLs — SYCL/UR
+          cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/ur_adapter_level_zero.dll" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/ur_adapter_level_zero_v2.dll" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/ur_adapter_opencl.dll" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/ur_loader.dll" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/ur_win_proxy_loader.dll" artifact/
+
+          # Copy oneAPI runtime DLLs — Compiler runtime
+          cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/sycl8.dll" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/svml_dispmd.dll" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/libmmd.dll" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/libiomp5md.dll" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/libsycl-fallback-bfloat16.spv" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/libsycl-native-bfloat16.spv" artifact/
+
+          # Copy oneAPI runtime DLLs — oneDNN, TBB, TCM, UMF
+          cp "${{ env.ONEAPI_ROOT }}/dnnl/latest/bin/dnnl.dll" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/tbb/latest/bin/tbb12.dll" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/tcm/latest/bin/tcm.dll" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/tcm/latest/bin/libhwloc-15.dll" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/umf/latest/bin/umf.dll" artifact/
+
+          cd artifact && 7z a -snl ../llama-server-windows-v3-sycl.zip *
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: llama-server-windows-v3-sycl
+          path: llama-server-windows-v3-sycl.zip
