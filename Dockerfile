@@ -34,16 +34,10 @@ RUN if [ -f /etc/alpine-release ]; then \
 COPY llama-src/ /src/
 WORKDIR /src
 
-RUN CUDA_STUBS=""; \
-    if [ "${USE_CUDA}" = "ON" ] && [ -d /usr/local/cuda/lib64/stubs ]; then \
-        CUDA_STUBS="-L/usr/local/cuda/lib64/stubs"; \
-    fi; \
-    cmake -B build \
+RUN cmake -B build \
     -DGGML_NATIVE=OFF \
     -DCMAKE_C_FLAGS="${ARCH_FLAGS}" \
     -DCMAKE_CXX_FLAGS="${ARCH_FLAGS}" \
-    -DCMAKE_EXE_LINKER_FLAGS="${CUDA_STUBS}" \
-    -DCMAKE_SHARED_LINKER_FLAGS="${CUDA_STUBS}" \
     -DGGML_CUDA=${USE_CUDA} \
     -DCMAKE_CUDA_ARCHITECTURES=${CUDA_ARCH} \
     -DBUILD_SHARED_LIBS=ON \
