@@ -10,6 +10,7 @@ ARG USE_CUDA="OFF"
 ARG USE_BLAS="ON"
 ARG USE_OPENSSL="ON"
 ARG USE_BORINGSSL="OFF"
+ARG EXTRA_CMAKE_ARGS=""
 ARG CUDA_ARCH="native"
 ARG LLAMA_SHA="unknown"
 ARG LLAMA_BUILD_NUMBER="0"
@@ -48,7 +49,8 @@ RUN cmake -B build \
     -DLLAMA_BUILD_EXAMPLES=OFF \
     -DLLAMA_BUILD_COMMIT=${LLAMA_SHA} \
     -DLLAMA_BUILD_NUMBER=${LLAMA_BUILD_NUMBER:-0} \
-    -DCMAKE_BUILD_TYPE=Release && \
+    -DCMAKE_BUILD_TYPE=Release \
+    ${EXTRA_CMAKE_ARGS} && \
     cmake --build build --config Release -j $(nproc) --target llama-server llama-cli || \
     (echo "=== Parallel build failed, retrying single-threaded for error details ===" && \
      cmake --build build --config Release -j 1 --target llama-server llama-cli 2>&1 | tail -80 && exit 1)

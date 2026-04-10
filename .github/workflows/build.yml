@@ -30,6 +30,7 @@ jobs:
             blas: "OFF"
             openssl: "OFF"
             boringssl: "ON"
+            extra_cmake: "-DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF -DGGML_BMI2=OFF"
             base: alpine:latest
             runtime: alpine:latest
           - variant: xeon-cuda
@@ -82,6 +83,7 @@ jobs:
             USE_BLAS=${{ matrix.blas || 'ON' }}
             USE_OPENSSL=${{ matrix.openssl || 'ON' }}
             USE_BORINGSSL=${{ matrix.boringssl || 'OFF' }}
+            EXTRA_CMAKE_ARGS=${{ matrix.extra_cmake || '' }}
             CUDA_ARCH=${{ matrix.cuda_arch || 'native' }}
             LLAMA_SHA=${{ steps.llama-sha.outputs.sha }}
             LLAMA_BUILD_NUMBER=${{ steps.llama-sha.outputs.number || '0' }}
