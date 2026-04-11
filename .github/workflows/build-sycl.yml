@@ -82,7 +82,9 @@ jobs:
           cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/svml_dispmd.dll" artifact/
           cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/libmmd.dll" artifact/
           cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/libiomp5md.dll" artifact/
-          cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/libomp140.x86_64.dll" artifact/
+
+          # Copy LLVM OpenMP runtime from MSVC redistributable
+          cp "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Redist/MSVC/"*/debug_nonredist/x64/Microsoft.VC143.OpenMP.LLVM/libomp140.x86_64.dll artifact/ 2>/dev/null || true
           cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/libsycl-fallback-bfloat16.spv" artifact/
           cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/libsycl-native-bfloat16.spv" artifact/
 
