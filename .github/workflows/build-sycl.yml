@@ -82,6 +82,7 @@ jobs:
           cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/svml_dispmd.dll" artifact/
           cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/libmmd.dll" artifact/
           cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/libiomp5md.dll" artifact/
+          cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/libomp140.x86_64.dll" artifact/
           cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/libsycl-fallback-bfloat16.spv" artifact/
           cp "${{ env.ONEAPI_ROOT }}/compiler/latest/bin/libsycl-native-bfloat16.spv" artifact/
 
