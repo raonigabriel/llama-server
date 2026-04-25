@@ -128,6 +128,7 @@ jobs:
       - name: Package distribution
         shell: pwsh
         run: |
+          New-Item -ItemType Directory -Path dist -Force
           $sha = "${{ steps.llama-sha.outputs.sha }}"
           $distName = "llama-server-windows-v3-cuda-$sha"
           Compress-Archive -Path llama-src/build/bin/Release/llama-server.exe -DestinationPath "dist/$distName.zip"
@@ -182,6 +183,7 @@ jobs:
       - name: Package distribution
         shell: pwsh
         run: |
+          New-Item -ItemType Directory -Path dist -Force
           $sha = "${{ steps.llama-sha.outputs.sha }}"
           $distName = "llama-server-windows-v3-cpu-$sha"
           Compress-Archive -Path llama-src/build/bin/Release/llama-server.exe -DestinationPath "dist/$distName.zip"
