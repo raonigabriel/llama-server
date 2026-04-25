@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -103,9 +103,12 @@ jobs:
           cuda: "13.2.0"
 
       - name: Clone llama.cpp
+        id: llama-sha
         shell: pwsh
         run: |
           git clone --depth 1 https://github.com/ggerganov/llama.cpp.git llama-src
+          $sha = git -C llama-src rev-parse --short=12 HEAD
+          echo "sha=$sha" >> $env:GITHUB_OUTPUT
 
       - name: Build Static Exe
         shell: pwsh
@@ -122,8 +125,82 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release -j $env:NUMBER_OF_PROCESSORS --target llama-server
 
-      - name: Upload Binary
+      - name: Package distribution
+        shell: pwsh
+        run: |
+          $sha = "${{ steps.llama-sha.outputs.sha }}"
+          $distName = "llama-server-windows-v3-cuda-$sha"
+          Compress-Archive -Path llama-src/build/bin/Release/llama-server.exe -DestinationPath "dist/$distName.zip"
+
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: llama-server-windows-v3-cuda
-          path: llama-src/build/bin/Release/llama-server.exe
+          path: dist/*.zip
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: windows-cuda-${{ steps.llama-sha.outputs.sha }}
+          name: llama-server Windows CUDA (llama.cpp ${{ steps.llama-sha.outputs.sha }})
+          body: |
+            Windows x86_64 standalone build with AVX2 + CUDA 13.2 support.
+            Built from llama.cpp commit `${{ steps.llama-sha.outputs.sha }}`.
+
+            **Requirements:**
+            - NVIDIA GPU with compute capability 8.6+ (RTX 30/40 series)
+            - CUDA runtime DLLs (`cublas64_13.dll`, `cublasLt64_13.dll`) from [CUDA Toolkit 13.2](https://developer.nvidia.com/cuda-toolkit) in the same directory or on PATH
+          files: dist/*.zip
+
+  # --- JOB 3: WINDOWS CPU-ONLY ---
+  build-windows-cpu:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone llama.cpp
+        id: llama-sha
+        shell: pwsh
+        run: |
+          git clone --depth 1 https://github.com/ggerganov/llama.cpp.git llama-src
+          $sha = git -C llama-src rev-parse --short=12 HEAD
+          echo "sha=$sha" >> $env:GITHUB_OUTPUT
+
+      - name: Build Static Exe
+        shell: pwsh
+        run: |
+          cd llama-src
+          cmake -B build `
+            -DGGML_NATIVE=OFF `
+            -DCMAKE_C_FLAGS="/arch:AVX2" `
+            -DCMAKE_CXX_FLAGS="/arch:AVX2" `
+            -DBUILD_SHARED_LIBS=OFF `
+            -DGGML_STATIC=ON `
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release -j $env:NUMBER_OF_PROCESSORS --target llama-server
+
+      - name: Package distribution
+        shell: pwsh
+        run: |
+          $sha = "${{ steps.llama-sha.outputs.sha }}"
+          $distName = "llama-server-windows-v3-cpu-$sha"
+          Compress-Archive -Path llama-src/build/bin/Release/llama-server.exe -DestinationPath "dist/$distName.zip"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: llama-server-windows-v3-cpu
+          path: dist/*.zip
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: windows-cpu-${{ steps.llama-sha.outputs.sha }}
+          name: llama-server Windows CPU (llama.cpp ${{ steps.llama-sha.outputs.sha }})
+          body: |
+            Windows x86_64 standalone CPU-only build with AVX2 support.
+            Built from llama.cpp commit `${{ steps.llama-sha.outputs.sha }}`.
+
+            **Requirements:**
+            - CPU with AVX2 support (Intel Haswell / AMD Excavator or newer)
+          files: dist/*.zip
