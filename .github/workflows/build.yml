@@ -137,7 +137,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: llama-server-windows-v3-cuda
-          path: dist/*.zip
+          path: llama-src/build/bin/Release/llama-server.exe
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -192,7 +192,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: llama-server-windows-v3-cpu
-          path: dist/*.zip
+          path: llama-src/build/bin/Release/llama-server.exe
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

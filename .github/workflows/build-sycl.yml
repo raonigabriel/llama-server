@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -101,4 +101,18 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: llama-server-windows-v3-sycl
-          path: llama-server-windows-v3-sycl.zip
+          path: artifact/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: windows-sycl-${{ env.LLAMA_SHA }}
+          name: llama-server Windows SYCL (llama.cpp ${{ env.LLAMA_SHA }})
+          body: |
+            Windows x86_64 standalone build with AVX2 + Intel SYCL/oneAPI support.
+            Built from llama.cpp commit `${{ env.LLAMA_SHA }}`.
+
+            **Requirements:**
+            - Intel GPU (Iris Xe integrated or Intel discrete GPU)
+            - Intel oneAPI runtime (DLLs included in the zip)
+          files: llama-server-windows-v3-sycl.zip
